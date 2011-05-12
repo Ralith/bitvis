@@ -31,7 +31,7 @@ void on_trade_insert(GtkTreeModel *tree_model,
                      GtkTreeIter  *iter,
                      gpointer      user_data) {
   GtkTreeView *view = GTK_TREE_VIEW(user_data);
-  gtk_tree_view_scroll_to_cell(view, path, NULL, FALSE, 0, 0);
+  //gtk_tree_view_scroll_to_cell(view, path, NULL, FALSE, 0, 0);
 }
 
 char *asprintfx(const char *fmt,  ...) {
