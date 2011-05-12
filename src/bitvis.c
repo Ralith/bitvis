@@ -195,51 +195,7 @@ void read_json(const gchar *buf, gsize len) {
   record_trade(time, price, vol, curr, sym);
 }
 
-gboolean tick(GIOChannel *source, GIOCondition condition, gpointer data) {
-  if(condition == G_IO_OUT) {
-    gtk_statusbar_push(statusbar, gtk_statusbar_get_context_id(statusbar, (const char*)data), "Connected!");
-    g_io_add_watch(ticker, G_IO_IN, tick, NULL);
-    freeaddrinfo(servinfo); // all done with this structure
-    /* Remove watch */
-    return FALSE;
-  }
-
-  GError *e = NULL;
-  guint bytes;
-  GIOStatus s = g_io_channel_read_chars(ticker,
-                                        readbuf+readbuf_end,
-                                        readbuf_size-readbuf_end,
-                                        &bytes, &e);
-  if(s != G_IO_STATUS_NORMAL) {
-    g_io_channel_shutdown(ticker, FALSE, &e);
-    gtk_statusbar_pop(statusbar, gtk_statusbar_get_context_id(statusbar, (const char*)data));
-    gtk_statusbar_push(statusbar, gtk_statusbar_get_context_id(statusbar, (const char*)data), "Lost connection!");
-  }
-  ssize_t i;
-  ssize_t last = 0;
-  const ssize_t total = readbuf_end + bytes;
-  for(i = readbuf_end; i < total; ++i) {
-    if(readbuf[i] == '\0' && i-last > 0) {
-      read_json(readbuf+last, i-last);
-      last = i+1;
-    }
-  }
-
-  if(total-last > 0) {
-    if(last == 0 && total == readbuf_size) {
-      readbuf_size *= 2;
-      readbuf = realloc(readbuf, readbuf_size*sizeof(gchar));
-    }
-    readbuf_end = total-last;
-    memmove(readbuf, readbuf+last, readbuf_end*sizeof(gchar));
-  } else {
-    readbuf_end = 0;
-  }
-
-  return TRUE;
-}
-
-gboolean try_connect(struct addrinfo *i) {
+gboolean do_connect(struct addrinfo *i) {
   const char *connctx = "Connection status";
   static struct addrinfo *current;
   struct addrinfo *p;
@@ -302,20 +258,11 @@ gboolean try_connect(struct addrinfo *i) {
   return TRUE;
 }
 
-int main(int argc, char **argv) {
-  gtk_init(&argc, &argv);
-
-  GtkWindow *mainwin = load_ui();
-  if(!mainwin) {
-    return 1;
-  }
-
-  gtk_widget_show_all(GTK_WIDGET(mainwin));
-
+int try_connect() {
   int res = resolve("bitcoincharts.com", "27007", &servinfo);
   if(res != 0) {
     GtkWidget *dialog = gtk_message_dialog_new(
-      mainwin,
+      NULL,
       GTK_DIALOG_DESTROY_WITH_PARENT,
       GTK_MESSAGE_ERROR,
       GTK_BUTTONS_CLOSE,
@@ -326,11 +273,78 @@ int main(int argc, char **argv) {
     return 1;
   }
   
-  if(!try_connect(servinfo)) {
+  if(!do_connect(servinfo)) {
     return 2;
   }
 
+  return 0;
+}
+
+gboolean tick(GIOChannel *source, GIOCondition condition, gpointer data) {
+  if(condition == G_IO_OUT) {
+    gtk_statusbar_push(statusbar, gtk_statusbar_get_context_id(statusbar, (const char*)data), "Connected!");
+    g_io_add_watch(ticker, G_IO_IN, tick, NULL);
+    freeaddrinfo(servinfo); // all done with this structure
+    /* Remove watch */
+    return FALSE;
+  }
+
+  GError *e = NULL;
+  guint bytes;
+  GIOStatus s = g_io_channel_read_chars(ticker,
+                                        readbuf+readbuf_end,
+                                        readbuf_size-readbuf_end,
+                                        &bytes, &e);
+  if(s != G_IO_STATUS_NORMAL) {
+    g_io_channel_shutdown(ticker, FALSE, &e);
+    g_object_unref(ticker);
+    ticker = NULL;
+
+    if(try_connect()) {
+      gtk_main_quit();
+    }
+    gtk_statusbar_pop(statusbar, gtk_statusbar_get_context_id(statusbar, (const char*)data));
+    
+  }
+  ssize_t i;
+  ssize_t last = 0;
+  const ssize_t total = readbuf_end + bytes;
+  for(i = readbuf_end; i < total; ++i) {
+    if(readbuf[i] == '\0' && i-last > 0) {
+      read_json(readbuf+last, i-last);
+      last = i+1;
+    }
+  }
+
+  if(total-last > 0) {
+    if(last == 0 && total == readbuf_size) {
+      readbuf_size *= 2;
+      readbuf = realloc(readbuf, readbuf_size*sizeof(gchar));
+    }
+    readbuf_end = total-last;
+    memmove(readbuf, readbuf+last, readbuf_end*sizeof(gchar));
+  } else {
+    readbuf_end = 0;
+  }
+
+  return TRUE;
+}
+
+int main(int argc, char **argv) {
+  gtk_init(&argc, &argv);
+
+  GtkWindow *mainwin = load_ui();
+  if(!mainwin) {
+    return 1;
+  }
+
+  gtk_widget_show_all(GTK_WIDGET(mainwin));
+
   readbuf = calloc(readbuf_size, sizeof(gchar));
+
+  if(try_connect()) {
+    return 1;
+  }
 
   gtk_main();
 
