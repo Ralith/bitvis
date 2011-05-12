@@ -1,0 +1,1 @@
+install(FILES main.glade DESTINATION share/${PROJECT_NAME})
