@@ -34,19 +34,59 @@ void on_trade_insert(GtkTreeModel *tree_model,
   gtk_tree_view_scroll_to_cell(view, path, NULL, FALSE, 0, 0);
 }
 
+char *asprintfx(const char *fmt,  ...) {
+	char *dest;
+	va_list ap;
+	int len;
+
+	dest = NULL;
+
+	va_start(ap, fmt);
+	len = vsnprintf(dest, 0, fmt, ap);
+
+	dest = (char*)malloc(len + 1);
+	vsprintf(dest, fmt, ap);
+
+	va_end(ap);
+
+	return dest;
+}
+
 GtkWindow *load_ui() {
-  GError *e = NULL;
-  GtkWindow *root;
+  GError *e;
   GtkBuilder* builder = gtk_builder_new();
-  gtk_builder_add_from_file(builder, "main.glade", &e);
+  const gchar * const *datadirs = g_get_system_data_dirs();
+  const gchar * const *dir;
+  for(dir = datadirs; datadirs != NULL; ++dir) {
+    char *path = asprintfx("%s/bitvis/%s", *dir, "main.glade");
+    e = NULL;
+    gtk_builder_add_from_file(builder, path, &e);
+    free(path);
+    if(e != NULL) {
+      if(!g_error_matches(e, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
+        GtkWidget *dialog = gtk_message_dialog_new(
+          NULL,
+          GTK_DIALOG_DESTROY_WITH_PARENT,
+          GTK_MESSAGE_ERROR,
+          GTK_BUTTONS_CLOSE,
+          "Unable to check %s for installed data files:\n%s",
+          *dir, e->message);
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        g_error_free(e);
+      }
+      continue;
+    }
+    break;
+  }
+  
   if(e != NULL) {
     GtkWidget *dialog = gtk_message_dialog_new(
       NULL,
       GTK_DIALOG_DESTROY_WITH_PARENT,
       GTK_MESSAGE_ERROR,
       GTK_BUTTONS_CLOSE,
-      "Failed to load UI description from %s:\n%s",
-      "main.glade", e->message);
+      "Failed to locate UI description (main.glade). verify that the program is properly installed");
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
     g_error_free(e);
@@ -54,7 +94,7 @@ GtkWindow *load_ui() {
   }
 
   /* Get root window */
-  root = GTK_WINDOW(gtk_builder_get_object(builder, "main"));
+  GtkWindow *root = GTK_WINDOW(gtk_builder_get_object(builder, "main"));
 
   GtkTreeView *view = GTK_TREE_VIEW(gtk_builder_get_object(builder, "treeview1"));
   statuslabel = GTK_LABEL(gtk_builder_get_object(builder, "statuslabel"));
@@ -172,6 +212,10 @@ gboolean tick(GIOChannel *source, GIOCondition condition, gpointer data) {
                                         readbuf+readbuf_end,
                                         readbuf_size-readbuf_end,
                                         &bytes, &e);
+  if(s != G_IO_STATUS_NORMAL) {
+    g_io_channel_shutdown(ticker, FALSE, &e);
+    gtk_label_set_markup(statuslabel, "<span background=\"#FF2200\">Connection lost!</span>");
+  }
   ssize_t i;
   ssize_t last = 0;
   const ssize_t total = readbuf_end + bytes;
@@ -231,6 +275,11 @@ gboolean try_connect(struct addrinfo *i) {
       }
     } else {
       gtk_label_set_markup(statuslabel, "<span background=\"#009900\">Connected!</span>");
+      if(ticker) {
+        g_object_unref(ticker);
+      }
+      ticker = g_io_channel_unix_new(fd);
+      g_io_channel_set_flags(ticker, G_IO_FLAG_NONBLOCK, NULL);
       g_io_add_watch(ticker, G_IO_IN, tick, NULL);
       freeaddrinfo(servinfo); // all done with this structure
     }
