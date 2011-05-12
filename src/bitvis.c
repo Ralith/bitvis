@@ -26,12 +26,10 @@ gchar *readbuf;
 size_t readbuf_end = 0;
 size_t readbuf_size = 1024;
 
-void on_trade_insert(GtkTreeModel *tree_model,
-                     GtkTreePath  *path,
-                     GtkTreeIter  *iter,
-                     gpointer      user_data) {
-  GtkTreeView *view = GTK_TREE_VIEW(user_data);
-  //gtk_tree_view_scroll_to_cell(view, path, NULL, FALSE, 0, 0);
+void on_view_change(GtkWidget *widget, GtkAllocation *allocation, gpointer user_data) {
+  GtkTreeView *view = GTK_TREE_VIEW(widget);
+  GtkAdjustment *vadj = gtk_tree_view_get_vadjustment(view);
+  gtk_adjustment_set_value(vadj, gtk_adjustment_get_upper(vadj) - gtk_adjustment_get_page_size(vadj));
 }
 
 char *asprintfx(const char *fmt,  ...) {
@@ -103,7 +101,7 @@ GtkWindow *load_ui() {
 
   /* Configure tree view */
   trade_store = gtk_list_store_new(COL_COUNT, G_TYPE_INT64, G_TYPE_FLOAT, G_TYPE_FLOAT, G_TYPE_STRING, G_TYPE_STRING);
-  g_signal_connect(trade_store, "row-inserted", G_CALLBACK(on_trade_insert), view);
+  g_signal_connect(view, "size-allocate", G_CALLBACK(on_view_change), NULL);
   gtk_tree_view_set_model(view, GTK_TREE_MODEL(trade_store));
 
   GtkTreeViewColumn *column;
