@@ -17,6 +17,7 @@ add_definitions(-Wall -Wextra)
 find_package(PkgConfig)
 
 pkg_check_modules(GTK REQUIRED gtk+-3.0)
+pkg_check_modules(JSONGLIB REQUIRED json-glib-1.0)
 
 add_subdirectory(src)
 add_subdirectory(share)

@@ -1,8 +1,8 @@
 #ifndef _NET_H_
 #define _NET_H_
 
-#include <gtk/gtk.h>
+#include <netdb.h>
 
-int do_connect(GtkWindow *root, const char *host, const char *port);
+int resolve(const char *host, const char *port, struct addrinfo **servinfo);
 
 #endif
