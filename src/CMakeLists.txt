@@ -2,6 +2,7 @@ include_directories(${GTK_INCLUDE_DIRS})
 link_directories(${GTK_LIBRARY_DIRS})
 
 add_executable(bitvis
+  net.c
   bitvis.c
   )
 
