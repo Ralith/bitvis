@@ -31,14 +31,10 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="statuslabel">
+          <object class="GtkStatusbar" id="statusbar">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="xalign">0</property>
-            <property name="label" translatable="yes">&lt;span background
-="#ffff00"&gt;Connecting...&lt;/span&gt;</property>
-            <property name="use_markup">True</property>
-            <property name="single_line_mode">True</property>
+            <property name="spacing">2</property>
           </object>
           <packing>
             <property name="expand">False</property>

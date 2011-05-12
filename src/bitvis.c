@@ -20,7 +20,7 @@ enum {
 
 GtkListStore *trade_store;
 GIOChannel *ticker = NULL;
-GtkLabel *statuslabel;
+GtkStatusbar *statusbar;
 struct addrinfo *servinfo;
 gchar *readbuf;
 size_t readbuf_end = 0;
@@ -95,7 +95,7 @@ GtkWindow *load_ui() {
   GtkWindow *root = GTK_WINDOW(gtk_builder_get_object(builder, "main"));
 
   GtkTreeView *view = GTK_TREE_VIEW(gtk_builder_get_object(builder, "treeview1"));
-  statuslabel = GTK_LABEL(gtk_builder_get_object(builder, "statuslabel"));
+  statusbar = GTK_STATUSBAR(gtk_builder_get_object(builder, "statusbar"));
 
   g_object_unref(builder);
 
@@ -197,7 +197,7 @@ void read_json(const gchar *buf, gsize len) {
 
 gboolean tick(GIOChannel *source, GIOCondition condition, gpointer data) {
   if(condition == G_IO_OUT) {
-    gtk_label_set_markup(statuslabel, "<span background=\"#009900\">Connected!</span>");
+    gtk_statusbar_push(statusbar, gtk_statusbar_get_context_id(statusbar, (const char*)data), "Connected!");
     g_io_add_watch(ticker, G_IO_IN, tick, NULL);
     freeaddrinfo(servinfo); // all done with this structure
     /* Remove watch */
@@ -212,7 +212,8 @@ gboolean tick(GIOChannel *source, GIOCondition condition, gpointer data) {
                                         &bytes, &e);
   if(s != G_IO_STATUS_NORMAL) {
     g_io_channel_shutdown(ticker, FALSE, &e);
-    gtk_label_set_markup(statuslabel, "<span background=\"#FF2200\">Connection lost!</span>");
+    gtk_statusbar_pop(statusbar, gtk_statusbar_get_context_id(statusbar, (const char*)data));
+    gtk_statusbar_push(statusbar, gtk_statusbar_get_context_id(statusbar, (const char*)data), "Lost connection!");
   }
   ssize_t i;
   ssize_t last = 0;
@@ -239,11 +240,13 @@ gboolean tick(GIOChannel *source, GIOCondition condition, gpointer data) {
 }
 
 gboolean try_connect(struct addrinfo *i) {
+  const char *connctx = "Connection status";
   static struct addrinfo *current;
   struct addrinfo *p;
   if(i != NULL) {
     current = i;
   }
+  gtk_statusbar_push(statusbar, gtk_statusbar_get_context_id(statusbar, connctx), "Connecting...");
   // loop through all the results and connect to the first we can
   int fd;
   for(p = current; p != NULL; p = p->ai_next) {
@@ -264,7 +267,7 @@ gboolean try_connect(struct addrinfo *i) {
         }
         ticker = g_io_channel_unix_new(fd);
         g_io_channel_set_flags(ticker, G_IO_FLAG_NONBLOCK, NULL);
-        g_io_add_watch(ticker, G_IO_OUT, tick, NULL);
+        g_io_add_watch(ticker, G_IO_OUT, tick, (gpointer)connctx);
         break;
       } else {
         close(fd);
@@ -272,13 +275,13 @@ gboolean try_connect(struct addrinfo *i) {
         continue;
       }
     } else {
-      gtk_label_set_markup(statuslabel, "<span background=\"#009900\">Connected!</span>");
+      gtk_statusbar_push(statusbar, gtk_statusbar_get_context_id(statusbar, connctx), "Connected!");
       if(ticker) {
         g_object_unref(ticker);
       }
       ticker = g_io_channel_unix_new(fd);
       g_io_channel_set_flags(ticker, G_IO_FLAG_NONBLOCK, NULL);
-      g_io_add_watch(ticker, G_IO_IN, tick, NULL);
+      g_io_add_watch(ticker, G_IO_IN, tick, (gpointer)connctx);
       freeaddrinfo(servinfo); // all done with this structure
     }
 
