@@ -106,33 +106,38 @@ GtkWindow *load_ui() {
 
   GtkTreeViewColumn *column;
 
+  GtkCellRenderer *r = gtk_cell_renderer_text_new();
+  /* Align the following right */
+  gtk_cell_renderer_set_alignment(r, 1.0, 0.5);
   column = gtk_tree_view_column_new_with_attributes(
     "Time",
-    gtk_cell_renderer_text_new(),
+    r,
     "text", COL_TIME,
     NULL);
   gtk_tree_view_append_column(view, column);
   column = gtk_tree_view_column_new_with_attributes(
     "Price",
-    gtk_cell_renderer_text_new(),
+    r,
     "text", COL_PRICE,
     NULL);
   gtk_tree_view_append_column(view, column);
   column = gtk_tree_view_column_new_with_attributes(
     "Volume",
-    gtk_cell_renderer_text_new(),
+    r,
     "text", COL_VOL,
     NULL);
   gtk_tree_view_append_column(view, column);
+  /* Reset renderer (default alignment) */
+  r = gtk_cell_renderer_text_new();
   column = gtk_tree_view_column_new_with_attributes(
     "Currency",
-    gtk_cell_renderer_text_new(),
+    r,
     "text", COL_CURR,
     NULL);
   gtk_tree_view_append_column(view, column);
   column = gtk_tree_view_column_new_with_attributes(
     "Symbol",
-    gtk_cell_renderer_text_new(),
+    r,
     "text", COL_SYM,
     NULL);
   gtk_tree_view_append_column(view, column);
