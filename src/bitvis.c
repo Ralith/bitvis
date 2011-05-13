@@ -351,6 +351,13 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  if(argc == 2 && !strcmp("test", argv[1])) {
+    unsigned i;
+    for(i = 0; i < 100; ++i) {
+      record_trade(i, i*0.1, i*1.4, "USD", "FAKE");
+    }
+  }
+
   gtk_main();
 
   return 0;
