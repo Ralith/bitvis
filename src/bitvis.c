@@ -55,7 +55,7 @@ GtkWindow *load_ui() {
   GtkBuilder* builder = gtk_builder_new();
   const gchar * const *datadirs = g_get_system_data_dirs();
   const gchar * const *dir;
-  for(dir = datadirs; dir != NULL; ++dir) {
+  for(dir = datadirs; *dir != NULL; ++dir) {
     char *path = asprintfx("%s/bitvis/%s", *dir, "main.glade");
     e = NULL;
     gtk_builder_add_from_file(builder, path, &e);
@@ -84,7 +84,7 @@ GtkWindow *load_ui() {
       GTK_DIALOG_DESTROY_WITH_PARENT,
       GTK_MESSAGE_ERROR,
       GTK_BUTTONS_CLOSE,
-      "Failed to locate UI description (main.glade). verify that the program is properly installed");
+      "Failed to locate UI description (main.glade). Verify that the program is properly installed.");
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
     g_error_free(e);
