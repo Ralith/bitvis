@@ -55,7 +55,7 @@ GtkWindow *load_ui() {
   GtkBuilder* builder = gtk_builder_new();
   const gchar * const *datadirs = g_get_system_data_dirs();
   const gchar * const *dir;
-  for(dir = datadirs; datadirs != NULL; ++dir) {
+  for(dir = datadirs; dir != NULL; ++dir) {
     char *path = asprintfx("%s/bitvis/%s", *dir, "main.glade");
     e = NULL;
     gtk_builder_add_from_file(builder, path, &e);
