@@ -155,18 +155,21 @@ GtkWindow *load_ui() {
     r,
     "text", COL_TIME,
     NULL);
+  gtk_tree_view_column_set_resizable(column, TRUE);
   gtk_tree_view_append_column(view, column);
   column = gtk_tree_view_column_new_with_attributes(
     "Price",
     r,
     "text", COL_PRICE,
     NULL);
+  gtk_tree_view_column_set_resizable(column, TRUE);
   gtk_tree_view_append_column(view, column);
   column = gtk_tree_view_column_new_with_attributes(
     "Volume",
     r,
     "text", COL_VOL,
     NULL);
+  gtk_tree_view_column_set_resizable(column, TRUE);
   gtk_tree_view_append_column(view, column);
   gtk_tree_view_append_column(view, gtk_tree_view_column_new());
 
