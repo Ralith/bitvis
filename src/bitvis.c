@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <gtk/gtk.h>
 #include <json-glib/json-glib.h>
+#include <time.h>
 
 #include "net.h"
 
@@ -140,7 +141,7 @@ GtkWindow *load_ui() {
   g_object_unref(builder);
 
   /* Configure tree view */
-  trade_store = gtk_list_store_new(COL_COUNT, G_TYPE_INT64, G_TYPE_FLOAT, G_TYPE_FLOAT);
+  trade_store = gtk_list_store_new(COL_COUNT, G_TYPE_STRING, G_TYPE_FLOAT, G_TYPE_FLOAT);
   g_signal_connect(view, "size-allocate", G_CALLBACK(on_view_change), NULL);
   gtk_tree_view_set_model(view, GTK_TREE_MODEL(trade_store));
 
@@ -178,8 +179,15 @@ void record_trade(gint64 time, float price, float vol) {
   GtkTreeIter iter;
   gtk_list_store_append(trade_store, &iter);
 
+  char buf[128];
+  {
+    time_t systime = time;
+    struct tm *local = localtime(&systime);
+    strftime(buf, 128, "%b %d %k:%M:%S", local);
+  }
+
   gtk_list_store_set(trade_store, &iter,
-                     COL_TIME, time,
+                     COL_TIME, buf,
                      COL_PRICE, price,
                      COL_VOL, vol,
                      -1);
