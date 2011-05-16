@@ -1,7 +1,6 @@
 Install with 'cmake . && make && sudo make install' and run with 'bitvis'.  Donations are welcome and will help me continue to dedicate time to this project: 1E72pRKiSUF1A6ehG7dr4uvQBeszsYoMyv
 
 TODO:
-- Stream from Mt. Gox for lower latency
 - Track and record depth
 - Graphs, graphs, graphs!
 - Configurable amount of cached history
