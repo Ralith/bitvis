@@ -211,11 +211,21 @@ void update_ticker(gfloat buy, gfloat sell, gfloat low, gfloat high, gint64 volu
 
 gboolean tick(GIOChannel *, GIOCondition, gpointer);
 
-void json_reader_read_member_checked(JsonReader *reader, const gchar *member) {
+gboolean json_reader_read_member_checked(JsonReader *reader, const gchar *member) {
   if(!json_reader_read_member(reader, member)) {
     const GError *e = json_reader_get_error(reader);
-    fprintf(stderr, "Error parsing data from server: %s\n", e->message);
+    GtkWidget *dialog = gtk_message_dialog_new(
+      NULL,
+      GTK_DIALOG_DESTROY_WITH_PARENT,
+      GTK_MESSAGE_ERROR,
+      GTK_BUTTONS_CLOSE,
+      "Failed to parse data from server:\n%s",
+      e->message);
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+    return FALSE;
   }
+  return TRUE;
 }
 
 void read_json(const gchar *buf, gsize len) {
@@ -230,7 +240,7 @@ void read_json(const gchar *buf, gsize len) {
   JsonReader *reader = json_reader_new(json_parser_get_root(parser));
 
   /* read the JSON tree */
-  json_reader_read_member(reader, "channel");
+  json_reader_read_member_checked(reader, "channel");
   const char *key = json_reader_get_string_value(reader);
   channel chan;
   if(!strcmp(key, TRADE_CHANNEL)) {
@@ -244,25 +254,32 @@ void read_json(const gchar *buf, gsize len) {
   }
   json_reader_end_member(reader);
 
-  json_reader_read_member(reader, "op");
-  const char *op = json_reader_get_string_value(reader);
-  if(!op || !strcmp(op, "private")) {
+  res = json_reader_read_member(reader, "op");
+  if(!res || !strcmp(json_reader_get_string_value(reader), "private")) {
     json_reader_end_member(reader);
     /* We should have data */
     switch(chan) {
     case CHAN_TRADE: {
-      json_reader_read_member(reader, "trade");
+      if(!json_reader_read_member_checked(reader, "trade")) {
+        break;
+      }
 
-      json_reader_read_member(reader, "amount");
-      gfloat amt = json_reader_get_double_value(reader);
+      gfloat amt = -1;
+      if(json_reader_read_member_checked(reader, "amount")) {
+        amt = json_reader_get_double_value(reader);
+      }
       json_reader_end_member(reader);
 
-      json_reader_read_member(reader, "date");
-      gint64 date = json_reader_get_int_value(reader);
+      gint64 date = -1;
+      if(json_reader_read_member_checked(reader, "date")) {
+        date = json_reader_get_int_value(reader);
+      }
       json_reader_end_member(reader);
 
-      json_reader_read_member(reader, "price");
-      gfloat price = json_reader_get_double_value(reader);
+      gfloat price = -1;
+      if(json_reader_read_member_checked(reader, "price")) {
+        price = json_reader_get_double_value(reader);
+      }
       json_reader_end_member(reader);
 
       json_reader_end_member(reader);
@@ -271,26 +288,36 @@ void read_json(const gchar *buf, gsize len) {
       break;
     }
     case CHAN_TICKER: {
-      json_reader_read_member(reader, "ticker");
+      json_reader_read_member_checked(reader, "ticker");
 
-      json_reader_read_member(reader, "buy");
-      gfloat buy = json_reader_get_double_value(reader);
+      gfloat buy = -1;
+      if(json_reader_read_member_checked(reader, "buy")) {
+        buy = json_reader_get_double_value(reader);
+      }
       json_reader_end_member(reader);
 
-      json_reader_read_member(reader, "high");
-      gfloat high = json_reader_get_double_value(reader);
+      gfloat high = -1;
+      if(json_reader_read_member_checked(reader, "high")) {
+        high = json_reader_get_double_value(reader);
+      }
       json_reader_end_member(reader);
 
-      json_reader_read_member(reader, "low");
-      gfloat low = json_reader_get_double_value(reader);
+      gfloat low = -1;
+      if(json_reader_read_member_checked(reader, "low")) {
+        low = json_reader_get_double_value(reader);
+      }
       json_reader_end_member(reader);
 
-      json_reader_read_member(reader, "sell");
-      gfloat sell = json_reader_get_double_value(reader);
+      gfloat sell = -1;
+      if(json_reader_read_member_checked(reader, "sell")) {
+        sell = json_reader_get_double_value(reader);
+      }
       json_reader_end_member(reader);
 
-      json_reader_read_member(reader, "vol");
-      gint64 vol = json_reader_get_int_value(reader);
+      gfloat vol = -1;
+      if(json_reader_read_member_checked(reader, "vol")) {
+        vol = json_reader_get_int_value(reader);
+      }
       json_reader_end_member(reader);
 
       json_reader_end_member(reader);
