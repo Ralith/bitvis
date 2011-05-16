@@ -67,7 +67,7 @@
                       <object class="GtkLabel" id="tickbuy">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Buy: &lt;b&gt;???&lt;/b&gt;</property>
+                        <property name="label" translatable="yes">Bid: &lt;b&gt;???&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                       </object>
                       <packing>
@@ -80,7 +80,7 @@
                       <object class="GtkLabel" id="ticksell">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Sell: &lt;b&gt;???&lt;/b&gt;</property>
+                        <property name="label" translatable="yes">Ask: &lt;b&gt;???&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                       </object>
                       <packing>

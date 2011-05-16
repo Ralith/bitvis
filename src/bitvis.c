@@ -199,11 +199,11 @@ void record_trade(gint64 time, float price, float vol) {
 void update_ticker(gfloat buy, gfloat sell, gfloat low, gfloat high, gint64 volume) {
   char *text;
 
-  text = asprintfx("<b>Buy:</b> %f", buy);
+  text = asprintfx("<b>Bid:</b> %f", buy);
   gtk_label_set_markup(ticker.buy, text);
   free(text);
 
-  text = asprintfx("<b>Sell:</b> %f", sell);
+  text = asprintfx("<b>Ask:</b> %f", sell);
   gtk_label_set_markup(ticker.sell, text);
   free(text);
 
