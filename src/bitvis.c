@@ -66,21 +66,22 @@ void on_view_change(GtkWidget *widget, GtkAllocation *allocation, gpointer user_
 }
 
 char *asprintfx(const char *fmt,  ...) {
-	char *dest;
-	va_list ap;
-	int len;
+  char *dest;
+  va_list ap;
+  int len;
 
-	dest = NULL;
+  dest = NULL;
 
-	va_start(ap, fmt);
-	len = vsnprintf(dest, 0, fmt, ap);
+  va_start(ap, fmt);
+  len = vsnprintf(dest, 0, fmt, ap);
+  va_end(ap);
 
-	dest = (char*)malloc(len + 1);
-	vsprintf(dest, fmt, ap);
+  dest = (char*)malloc(len + 1);
+  va_start(ap, fmt);
+  vsprintf(dest, fmt, ap);
+  va_end(ap);
 
-	va_end(ap);
-
-	return dest;
+  return dest;
 }
 
 GtkWindow *load_ui() {
