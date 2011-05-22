@@ -524,13 +524,23 @@ gboolean tick(GIOChannel *source, GIOCondition condition, gpointer data) {
   if(s != G_IO_STATUS_NORMAL) {
     gtk_statusbar_pop(statusbar, gtk_statusbar_get_context_id(statusbar, (const char*)data));
 
-    GtkWidget *dialog = gtk_message_dialog_new(
-      NULL,
-      GTK_DIALOG_DESTROY_WITH_PARENT,
-      GTK_MESSAGE_ERROR,
-      GTK_BUTTONS_CLOSE,
-      "Lost connection to market data source:\n%s\nAttempting to reconnect.",
-      e->message);
+    GtkWidget *dialog;
+    if(e) {
+      dialog = gtk_message_dialog_new(
+        NULL,
+        GTK_DIALOG_DESTROY_WITH_PARENT,
+        GTK_MESSAGE_ERROR,
+        GTK_BUTTONS_CLOSE,
+        "Lost connection to market data source:\n%s\nAttempting to reconnect.",
+        e->message);
+    } else {
+      dialog = gtk_message_dialog_new(
+        NULL,
+        GTK_DIALOG_DESTROY_WITH_PARENT,
+        GTK_MESSAGE_ERROR,
+        GTK_BUTTONS_CLOSE,
+        "Lost connection to market data source.\nAttempting to reconnect.");
+    }
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
     
