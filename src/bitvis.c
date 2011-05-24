@@ -579,6 +579,7 @@ gboolean tick(GIOChannel *source, GIOCondition condition, gpointer data) {
     }
     readbuf_end = total-begin;
     memmove(readbuf, readbuf+begin, readbuf_end*sizeof(gchar));
+    begin = 0;
   }
 
   return TRUE;
